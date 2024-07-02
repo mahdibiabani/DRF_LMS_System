@@ -177,3 +177,7 @@ DJOSER = {
 
 
 AUTH_USER_MODEL = 'core.CustomUser'
+
+# ZarinPal
+SANDBOX = True
+ZARINPALL_MERCHANT_ID = 'aaabbbaaabbbaaabbbaaabbbaaabbbaaabbb'
