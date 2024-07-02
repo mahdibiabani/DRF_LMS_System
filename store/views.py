@@ -17,7 +17,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny 
 #ReadOnlyModelViewSet   instead of     ModelViewSet | for only read and get objects without deleting and updating
 from django_filters.rest_framework import DjangoFilterBackend
-from store.models import Cart, CartItem, Category, Comment, Course, Customer, Order, OrderItem
+from store.filters import CourseFilter
+from store.models import Cart, CartItem, Category, Comment, Course, Customer, EnrolledCourse, Notification, Order, OrderItem
 from store.paginations import DefaultPagination
 from store.permissions import CustomDjangoModelPermissions, IsAdminOrReadOnly, SendPrivateEmailToCustomerPermission
 from store.serializers import AddCartItemSerializer, CartItemSerializer, CartSerializer, CategorySerializer, CommentSerializer, CourseSerializer, CustomerSerializer, OrderCreateSerializer, OrderForAdminSerializer, OrderSerializer, OrderUpdateSerializer, UpdateCartItemSerializer
@@ -37,6 +38,7 @@ class CourseViewSet(ModelViewSet):
 
      serializer_class = CourseSerializer
      filter_backends = [SearchFilter, DjangoFilterBackend, OrderingFilter]
+     filterset_class = CourseFilter
      ordering_fields = ['name', 'unit_price']
      search_fields = ['name', 'category__title']
      #----custom pagination----
@@ -56,130 +58,7 @@ class CourseViewSet(ModelViewSet):
               return Response({'error': 'there is some orderitems including this course'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
           course.delete()
           return Response(status=status.HTTP_204_NO_CONTENT)
-#--------------------------------------------------------------------------------------------------
 
-
-
-
-# class ProductList(ListCreateAPIView):
-
-#      serializer_class = ProductSerializer
-#      queryset = Product.objects.select_related('category').all()
-
-     # def get_serializer_class(self):
-     #      return ProductSerializer
-     
-     # def get_queryset(self):
-     #      return Product.objects.select_related('category').all()
-     
-     # def get_serializer_context(self):
-     #      return {'request': self.request}
-
-
-
-
-# class ProductList(APIView):
-
-#      def get(self,request):
-#           products_queryset = Product.objects.select_related('category').all()
-#           serializer = ProductSerializer(products_queryset,context={'request': request}, many=True)
-#           return Response(serializer.data)
-     
-#      def post(self, request):
-#           serializer = ProductSerializer(data=request.data)
-#           serializer.is_valid(raise_exception=True)
-#           serializer.save()
-#           return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-
-#functionalview
-# @api_view(['GET', 'POST'])
-# def product_list(request):
-#      if request.method == 'GET':
-#             products_queryset = Product.objects.select_related('category').all()
-#             serializer = ProductSerializer(products_queryset,context={'request': request}, many=True)
-#             return Response(serializer.data)
-     
-
-#      elif request.method == 'POST':
-#         serializer = ProductSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-#class-based view
-# class ProductDetail(RetrieveUpdateDestroyAPIView):
-
-#      serializer_class = ProductSerializer
-#      queryset = Product.objects.select_related('category')
-
-
-#      def delete(self, request, pk):
-#           product = get_object_or_404(Product.objects.select_related('category'), pk=pk)
-#           if product.order_items.count() > 0:
-#               return Response({'error': 'there is some orderitems including this product'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-#           product.delete()
-#           return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-
-# class ProductDetail(APIView):
-#      def get(self, request, pk):
-          
-#           product = get_object_or_404(Product.objects.select_related('category'), pk=pk) 
-#           serializer = ProductSerializer(product, context={'request': request})
-#           return Response(serializer.data)
-
-#      def put(self, request, pk):
-#           product = get_object_or_404(Product.objects.select_related('category'), pk=pk)
-#           serializer = ProductSerializer(product, data=request.data)
-#           serializer.is_valid(raise_exception=True)
-#           serializer.save()
-#           return Response(serializer.data)
-
-#      def delete(self, request, pk):
-#           product = get_object_or_404(Product.objects.select_related('category'), pk=pk)
-#           if product.order_items.count() > 0:
-#               return Response({'error': 'there is some orderitems including this product'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-#           product.delete()
-#           return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-
-
-#functional view
-# @api_view(['GET', 'PUT', 'DELETE'])
-# def product_detail(request, pk):
-#     product = get_object_or_404(Product.objects.select_related('category'), pk=pk)   
-
-#     if request.method == 'GET':
-#         serializer = ProductSerializer(product, context={'request': request})
-#         return Response(serializer.data)
-    
-#     elif request.method == 'PUT':
-#          serializer = ProductSerializer(product, data=request.data)
-#          serializer.is_valid(raise_exception=True)
-#          serializer.save()
-#          return Response(serializer.data)
-    
-#     elif request.method == 'DELETE':
-#          if product.order_items.count() > 0:
-#               return Response({'error': 'there is some orderitems including this product'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-#          product.delete()
-#          return Response(status=status.HTTP_204_NO_CONTENT)
-    
-
-
-         
-   
-    # if serializer.is_valid():
-    #     serializer.validated_data
-    #     return Response('everything is ok')
-
-    # else:
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    # return Response('All ok')
 
 #category list and category detail both together-------------------------------------------------------
 class CategoryViewSet(ModelViewSet):
@@ -304,7 +183,7 @@ class CommentViewSet(ModelViewSet):
      serializer_class = CommentSerializer
 
      def get_queryset(self):
-          course_pk = self.kwargs['product_pk']
+          course_pk = self.kwargs['course_pk']
           return Comment.objects.filter(course_id=course_pk).all()
      
      def get_serializer_context(self):
@@ -508,6 +387,8 @@ class OrderVerifyView(APIView):
                     order.zarinpal_ref_id = data['RefID']
                     order.zarinpal_data = data
                     order.save()
+
+
                     return Response({'success': 'Your payment has been successfully completed!'}, status=status.HTTP_200_OK)
                     # Need to ckeak for order.return_products_to_cart
                 elif payment_code == 101:
@@ -524,4 +405,8 @@ class OrderVerifyView(APIView):
         else:
 
             # Need to ckeak for order.return_products_to_cart
-            return Response({'error': 'The transaction was unsuccessful or canceled by user !'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)          
+            return Response({'error': 'The transaction was unsuccessful or canceled by user !'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+
+        

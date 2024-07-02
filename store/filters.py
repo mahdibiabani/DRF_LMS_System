@@ -1,10 +1,15 @@
 from django_filters.rest_framework import FilterSet
 
-from .models import Product
+from .models import Course
 
-class ProductFilter(FilterSet):
+class CourseFilter(FilterSet):
     class Meta:
-        model = Product
+        model = Course
         fields = {
-            'inventory': ['lt', 'gt'],
+            'name': ['icontains'],
+            'description': ['icontains'],
+            'unit_price': ['exact', 'lt', 'gt'],
+            'teacher': ['exact'],
+            'language': ['exact'],
+            'level': ['exact'],
         }

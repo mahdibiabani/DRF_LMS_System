@@ -14,8 +14,10 @@ router.register('customers', views.CustomerViewSet, basename='customer')
 router.register('orders', views.OrderViewSet, basename='order')
 
 
+
 courses_router = routers.NestedDefaultRouter(router, 'courses', lookup='course')
 courses_router.register('comments', views.CommentViewSet, basename='course-comments')
+
 
 
 cart_items_router = routers.NestedDefaultRouter(router, 'carts', lookup='cart')
