@@ -102,7 +102,7 @@ admin.site.register(Wishlist)
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['first_name', 'last_name', 'email']
+    list_display = [ 'id', 'first_name', 'last_name', 'email']
     list_per_page = 10
     ordering = ['user__first_name', 'user__last_name']
     search_fields = ['user__first_name__istartswith', 'user__last_name__istartswith']

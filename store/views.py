@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.db.models import Count, Prefetch
 from config import settings
+from django.utils import timezone
 
 from django.urls import reverse
 from rest_framework.decorators import api_view
@@ -9,7 +10,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet 
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, DestroyModelMixin
@@ -17,11 +18,12 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny 
 #ReadOnlyModelViewSet   instead of     ModelViewSet | for only read and get objects without deleting and updating
 from django_filters.rest_framework import DjangoFilterBackend
+from core.models import CustomUser
 from store.filters import CourseFilter
-from store.models import Cart, CartItem, Category, Comment, Course, Customer, EnrolledCourse, Notification, Order, OrderItem
+from store.models import Cart, CartItem, Category, Certificate, Comment, CompletedLesson, Course, Customer, EnrolledCourse, Notification, Order, OrderItem
 from store.paginations import DefaultPagination
 from store.permissions import CustomDjangoModelPermissions, IsAdminOrReadOnly, SendPrivateEmailToCustomerPermission
-from store.serializers import AddCartItemSerializer, CartItemSerializer, CartSerializer, CategorySerializer, CommentSerializer, CourseSerializer, CustomerSerializer, OrderCreateSerializer, OrderForAdminSerializer, OrderSerializer, OrderUpdateSerializer, UpdateCartItemSerializer
+from store.serializers import AddCartItemSerializer, CartItemSerializer, CartSerializer, CategorySerializer, CommentSerializer, CourseSerializer, CustomerSerializer, OrderCreateSerializer, OrderForAdminSerializer, OrderSerializer, OrderUpdateSerializer, StudentSummarySerializer, UpdateCartItemSerializer
 
 from .signals import order_created
 
@@ -389,6 +391,8 @@ class OrderVerifyView(APIView):
                     order.save()
 
 
+
+
                     return Response({'success': 'Your payment has been successfully completed!'}, status=status.HTTP_200_OK)
                     # Need to ckeak for order.return_products_to_cart
                 elif payment_code == 101:
@@ -409,4 +413,29 @@ class OrderVerifyView(APIView):
 
 
 
-        
+class StudentSummaryAPIView(ListAPIView):
+     serializer_class = StudentSummarySerializer
+     permission_classes = [AllowAny]
+
+     def get_queryset(self):
+          user_id = self.kwargs['user_id']
+          user = CustomUser.objects.get(id=user_id)
+
+          total_courses = EnrolledCourse.objects.filter(user=user).count()
+          completed_lessons = CompletedLesson.objects.filter(user=user).count()
+          achieved_certificates = Certificate.objects.filter(user=user).count() 
+
+          return [{
+               'total_courses': total_courses,
+               'completed_lessons': completed_lessons,
+               'achieved_certificates': achieved_certificates,
+               }]
+             
+     def list(self, request, *args, **kwargs):
+          queryset = self.get_queryset()
+          serializer = self.get_serializer(queryset, many=True)
+          return Response(serializer.data)             
+     
+
+
+     

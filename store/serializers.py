@@ -365,3 +365,10 @@ class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wishlist
         fields = '__all__'           
+
+
+class StudentSummarySerializer(serializers.Serializer):
+    total_courses = serializers.IntegerField(default=0)
+    completed_lessons = serializers.IntegerField(default=0)
+    achieved_certificates = serializers.IntegerField(default=0)
+    

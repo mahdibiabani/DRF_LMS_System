@@ -15,7 +15,7 @@ NOTI_TYPE = (
     ('New Course Question', 'New Course Question'),
     ('Course Published', 'Course Published'),
     ('Draft', 'Draft'),
-    ('Course Enrollment  Completed', 'Course Enrollment  Completed'),
+    ('Course Enrollment Completed', 'Course Enrollment Completed'),
 )
 
 

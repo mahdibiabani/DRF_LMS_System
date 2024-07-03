@@ -15,6 +15,7 @@ router.register('orders', views.OrderViewSet, basename='order')
 
 
 
+
 courses_router = routers.NestedDefaultRouter(router, 'courses', lookup='course')
 courses_router.register('comments', views.CommentViewSet, basename='course-comments')
 
@@ -26,6 +27,7 @@ cart_items_router.register('items', views.CartItemViewSet, basename='cart-items'
 urlpatterns = [
 
     path('orders/<int:order_id>/pay/', views.OrderPayView.as_view(), name='order-pay'),
-    path('orders/verify', views.OrderVerifyView.as_view(), name='order_verify')
+    path('orders/verify', views.OrderVerifyView.as_view(), name='order_verify'),
+    path('student/summary/<user_id>/', views.StudentSummaryAPIView.as_view(), name='student_summary'),
 
 ] + router.urls + courses_router.urls + cart_items_router.urls
